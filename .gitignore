@@ -3,3 +3,6 @@
 .ipynb_checkpoints/Stats-checkpoint.ipynb
 __pycache__/conll.cpython-37.pyc
 __pycache__/stats.cpython-37.pyc
+*.ipynb
+.DS_Store
+__pycache__/
