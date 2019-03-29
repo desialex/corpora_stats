@@ -31,11 +31,25 @@ def count_children(root, dictionary):
     dictionary[root.token['deprel']][str(len(root.children))] += 1
 
     
-def tree_stats(tree):
-    children_stats = [tree_stats(child) for child in tree.children]
+def tree_stats(tree, root_distance=0):
     stats = {}
+    children_stats = [tree_stats(child, root_distance+1) for child in tree.children]
     stats['weight'] = sum([d['weight'] for d in children_stats]) + 1
     stats['depth'] = max([d['depth'] for d in children_stats], default=-1) + 1
+    # Dependency distance and hierarchical distance
+    if tree.token['head'] == 0: # Tree is the sentence's root
+        stats['dd'] = 0
+    else:
+        stats['dd'] = abs(tree.token['head'] - tree.token['id']) - 1
+    stats['hd'] = root_distance
+    stats['ddsum'] = sum([d['ddsum'] for d in children_stats]) + stats['dd']
+    stats['hdsum'] = sum([d['hdsum'] for d in children_stats]) + stats['hd']
+    if stats['weight'] > 1:
+	      stats['mdd'] = stats['ddsum'] / (stats['weight'] - 1)
+	      stats['mhd'] = stats['hdsum'] / (stats['weight'] - 1)	
+    else:
+	      stats['mdd'] = 0
+	      stats['mhd'] = 0
     return stats
 
 
@@ -80,18 +94,21 @@ def rel_stats(tree):
         return rels
     else:
         return {tree.token['deprel']:{0 : 1}}
-    return rels
 
 
 if __name__ == "__main__":
     path = "data/fr_ftb-ud-dev.conllu"
-#     stats = [tree_stats(tree) for tree in parse_tree_conll(path)]
+    stats = [tree_stats(tree) for tree in parse_tree_conll(path)]
+    print(stats[0])
+#     _ = [print(s) for s in stats]
+#     print(np.array([s['mdd'] for s in stats]).mean())
+#     print(max([s['mdd'] for s in stats]))
 #     mw = np.array([d['weight'] for d in stats]).mean()
 #     md = np.array([d['depth'] for d in stats]).mean()
 #     print(mw, md)
 #     children = children_per_branch(parse_tree_conll(path))
 #     print(children.keys())
 #     print(children['root'])
-    sents = parse_tree_conll(path)
-    print("{'relation': {number of immidiate dependents : number of occurences}}")
-    print(rel_stats(sents[1]))
+#     sents = parse_tree_conll(path)
+#     print("{'relation': {number of immidiate dependents : number of occurences}}")
+#     print(rel_stats(sents[1]))
