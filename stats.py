@@ -88,19 +88,30 @@ def rel_stats(tree):
     if tree.children:
         rels = {}
         rels.setdefault(tree.token['deprel'], dict())
-        rels[tree.token['deprel']].setdefault(len(tree.children), 1)
-        for child in tree.children:
+        rels[tree.token['deprel']].setdefault('branching', dict())
+        rels[tree.token['deprel']]['branching'].setdefault(len(tree.children), 1)        
+        rels[tree.token['deprel']].setdefault('frequency', 1)
+        for child in tree.children: 
             dict_merge(rels, rel_stats(child))
+            rels[child.token['deprel']].setdefault('lr_linking', dict())
+            rels[child.token['deprel']].setdefault('gPOS:dPOS', dict())
+            rels[child.token['deprel']]['gPOS:dPOS'].setdefault(str(tree.token['upostag'])+':'+
+                                                                str(child.token['upostag']), 1)
+            if child.token['id'] < tree.token['id']:
+                rels[child.token['deprel']]['lr_linking'].setdefault('left', 1)
+            else:
+                rels[child.token['deprel']]['lr_linking'].setdefault('right', 1)
         return rels
     else:
-        return {tree.token['deprel']:{0 : 1}}
+        return {tree.token['deprel']:{'branching' : {0 : 1}, 'frequency' : 1}}
 
 
 if __name__ == "__main__":
     path = "data/fr_ftb-ud-dev.conllu"
-    stats = [tree_stats(tree) for tree in parse_tree_conll(path)]
+    trees = parse_tree_conll(path)
+    stats = [tree_stats(tree) for tree in trees]
     print(stats[0])
-#     _ = [print(s) for s in stats]
+    _ = [print(r) for r in rel_stats(trees[0]).items()]
 #     print(np.array([s['mdd'] for s in stats]).mean())
 #     print(max([s['mdd'] for s in stats]))
 #     mw = np.array([d['weight'] for d in stats]).mean()
