@@ -87,23 +87,27 @@ def dict_merge(dct, merge_dct):
 def rel_stats(tree):
     if tree.children:
         rels = {}
-        rels.setdefault(tree.token['deprel'], dict())
-        rels[tree.token['deprel']].setdefault('branching', dict())
-        rels[tree.token['deprel']]['branching'].setdefault(len(tree.children), 1)        
-        rels[tree.token['deprel']].setdefault('frequency', 1)
+        rels.update({tree.token['deprel'] : {'branching' : {len(tree.children) : 1}, 
+                                             'frequency' : 1, 
+                                             'lr_branching' : {'left' : 0, 'right' : 0}}})
+        rels.update({tree.token['upostag'] : {'branching' : {len(tree.children) : 1},
+                                              'frequency' : 1, 
+                                              'lr_branching' : {'left' : 0, 'right' : 0}}})
         for child in tree.children: 
             dict_merge(rels, rel_stats(child))
-            rels[child.token['deprel']].setdefault('lr_linking', dict())
             rels[child.token['deprel']].setdefault('gPOS:dPOS', dict())
             rels[child.token['deprel']]['gPOS:dPOS'].setdefault(str(tree.token['upostag'])+':'+
                                                                 str(child.token['upostag']), 1)
             if child.token['id'] < tree.token['id']:
-                rels[child.token['deprel']]['lr_linking'].setdefault('left', 1)
+                rels[tree.token['deprel']]['lr_branching']['left'] += 1
+                rels[tree.token['upostag']]['lr_branching']['left'] += 1
             else:
-                rels[child.token['deprel']]['lr_linking'].setdefault('right', 1)
+                rels[tree.token['deprel']]['lr_branching']['right'] += 1
+                rels[tree.token['upostag']]['lr_branching']['right'] += 1
         return rels
     else:
-        return {tree.token['deprel']:{'branching' : {0 : 1}, 'frequency' : 1}}
+        return {tree.token['deprel']:{'branching' : {0 : 1}, 'frequency' : 1}, 
+               tree.token['upostag']:{'branching' : {0 : 1}, 'frequency' : 1}}
 
 
 if __name__ == "__main__":

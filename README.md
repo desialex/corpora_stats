@@ -17,8 +17,8 @@
 	- [ ] branch thickness = branch weight
 
 * __Per POS tag, per tree__
-	- [ ] frequency (absolute)
-	- [ ] left/right branching
-	- [ ] branching = number of dependents of the node linked (directly) by a relation
+	- [x] frequency (absolute)
+	- [x] left/right branching
+	- [x] branching = number of dependents of the node linked (directly) by a relation
 	- [ ] branch length = branch depth
 	- [ ] branch thickness = branch weight
