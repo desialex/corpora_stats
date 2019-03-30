@@ -45,11 +45,11 @@ def tree_stats(tree, root_distance=0):
     stats['ddsum'] = sum([d['ddsum'] for d in children_stats]) + stats['dd']
     stats['hdsum'] = sum([d['hdsum'] for d in children_stats]) + stats['hd']
     if stats['weight'] > 1:
-	      stats['mdd'] = stats['ddsum'] / (stats['weight'] - 1)
-	      stats['mhd'] = stats['hdsum'] / (stats['weight'] - 1)	
+        stats['mdd'] = stats['ddsum'] / (stats['weight'] - 1)
+        stats['mhd'] = stats['hdsum'] / (stats['weight'] - 1)	
     else:
-	      stats['mdd'] = 0
-	      stats['mhd'] = 0
+        stats['mdd'] = 0
+        stats['mhd'] = 0
     return stats
 
 
