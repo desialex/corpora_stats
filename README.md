@@ -1,4 +1,4 @@
-# Corpus stats project
+# Corpora stats project
 
 * __Per tree (node)__
 	- [x] weight = number of nodes
