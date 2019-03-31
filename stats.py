@@ -88,10 +88,10 @@ def rel_stats(tree):
     if tree.children:
         rels = {}
         rels.update({tree.token['deprel'] : {'branching' : {len(tree.children) : 1}, 
-                                             'frequency' : 1, 
+                                             'count' : 1, 
                                              'lr_branching' : {'left' : 0, 'right' : 0}}})
         rels.update({tree.token['upostag'] : {'branching' : {len(tree.children) : 1},
-                                              'frequency' : 1, 
+                                              'count' : 1, 
                                               'lr_branching' : {'left' : 0, 'right' : 0}}})
         for child in tree.children: 
             dict_merge(rels, rel_stats(child))
@@ -106,8 +106,8 @@ def rel_stats(tree):
                 rels[tree.token['upostag']]['lr_branching']['right'] += 1
         return rels
     else:
-        return {tree.token['deprel']:{'branching' : {0 : 1}, 'frequency' : 1}, 
-               tree.token['upostag']:{'branching' : {0 : 1}, 'frequency' : 1}}
+        return {tree.token['deprel']:{'branching' : {0 : 1}, 'count' : 1}, 
+               tree.token['upostag']:{'branching' : {0 : 1}, 'count' : 1}}
 
 
 if __name__ == "__main__":
