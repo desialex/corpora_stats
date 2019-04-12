@@ -13,34 +13,56 @@ from conll import load_conll, parse_conll, parse_tree_conll
 
 
 def tree_stats(tree, root_distance=0):
+
+	# Initialize dictionary
 	stats = {}
-	stats['rels'] = {tree.token['deprel']  : {'branching' : {len(tree.children) : 1}, 
-																						'count' : 1,
-																						'left' : 0,
-																						'right' : 0}}
-	stats['postags'] = {tree.token['upostag'] : {'branching' : {len(tree.children) : 1},
-																							 'count' : 1,
-																							 'left' : 0,
-																							 'right' : 0}}
+	stats['root_id'] = tree.token['id']
+	stats['root_pos'] = tree.token['upostag']
+	rel = tree.token['deprel']
+	pos = tree.token['upostag']
+	stats['rels'] = {rel  : {'branching' : {len(tree.children) : 1}, 
+													 'count' : 1}}
+	stats['postags'] = {pos : {'branching' : {len(tree.children) : 1},
+														 'count' : 1}}
+
+	# Get stats for all children (children_stats is a list of stat dictionaries)
 	children_stats = [tree_stats(child, root_distance+1) for child in tree.children]
-	stats['weight'] = sum([d['weight'] for d in children_stats]) + 1
-	stats['depth'] = max([d['depth'] for d in children_stats], default=-1) + 1
+	
+	# Weight and depth
+	stats['weight'] = sum([c['weight'] for c in children_stats]) + 1
+	stats['depth'] = max([c['depth'] for c in children_stats], default=-1) + 1
+
 	# Dependency distance and hierarchical distance
 	if tree.token['head'] == 0: # Tree is the sentence's root
 		stats['dd'] = 0
 	else:
 		stats['dd'] = abs(tree.token['head'] - tree.token['id']) - 1
 	stats['hd'] = root_distance
-	stats['ddsum'] = sum([d['ddsum'] for d in children_stats]) + stats['dd']
-	stats['hdsum'] = sum([d['hdsum'] for d in children_stats]) + stats['hd']
-	stats['rels'] = merge_dicts([stats['rels']] + [d['rels'] for d in children_stats])
-	stats['postags'] = merge_dicts([stats['postags']] + [d['postags'] for d in children_stats])
+	stats['ddsum'] = sum([c['ddsum'] for c in children_stats]) + stats['dd']
+	stats['hdsum'] = sum([c['hdsum'] for c in children_stats]) + stats['hd']
+
+	# Mean dependency distance and mean hierarchical distance
 	if stats['weight'] > 1:
 		stats['mdd'] = stats['ddsum'] / (stats['weight'] - 1)
 		stats['mhd'] = stats['hdsum'] / (stats['weight'] - 1)	
 	else:
 		stats['mdd'] = 0
 		stats['mhd'] = 0
+
+	# Branching and count stats for relations and POS tags
+	right = sum([True for c in children_stats if c['root_id']-stats['root_id'] > 0])
+	left = sum([True for c in children_stats if c['root_id']-stats['root_id'] < 0])
+	stats['rels'][rel]['right'] = right
+	stats['rels'][rel]['left'] = left
+	stats['rels'] = merge_dicts([stats['rels']] + [c['rels'] for c in children_stats])
+	stats['postags'][pos]['right'] = right
+	stats['postags'][pos]['left'] = left
+	stats['postags'] = merge_dicts([stats['postags']] + [c['postags'] for c in children_stats])
+	
+	# Gov and dep POS for relations
+	tuples = [(pos, c['root_pos']) for c in children_stats]
+	stats['rels'][rel]['pos_pairs'] = {t:tuples.count(t) for t in tuples}
+
 	return stats
 
 def dict_merge(dct, merge_dct):
@@ -69,34 +91,8 @@ def merge_dicts(dicts):
 		dict_merge(merged, d)
 	return merged
 
-# def rel_stats(tree):
-# 	if tree.children:
-# 		rels = {}
-# 		rels.update({tree.token['deprel']  : {'branching' : {len(tree.children) : 1}, 
-# 																					'count' : 1,
-# 																					'lr_branching' : {'left' : 0, 'right' : 0}}})
-# 		rels.update({tree.token['upostag'] : {'branching' : {len(tree.children) : 1},
-# 																					'count' : 1,
-# 																					'lr_branching' : {'left' : 0, 'right' : 0}}})
-# 		for child in tree.children: 
-# 			dict_merge(rels, rel_stats(child))
-# 			rels[child.token['deprel']].setdefault('gPOS:dPOS', dict())
-# 			rels[child.token['deprel']]['gPOS:dPOS'].setdefault(str(tree.token['upostag'])+':'+
-# 																str(child.token['upostag']), 1)
-# 			if child.token['id'] < tree.token['id']:
-# 				rels[tree.token['deprel']]['lr_branching']['left'] += 1
-# 				rels[tree.token['upostag']]['lr_branching']['left'] += 1
-# 			else:
-# 				rels[tree.token['deprel']]['lr_branching']['right'] += 1
-# 				rels[tree.token['upostag']]['lr_branching']['right'] += 1
-# 		return rels
-# 	else:
-# 		return {tree.token['deprel']:{'branching' : {0 : 1}, 'count' : 1}, 
-# 			   tree.token['upostag']:{'branching' : {0 : 1}, 'count' : 1}}
-
-
 if __name__ == "__main__":
-	path = "data/test.conllu"
+	path = "data/fr_ftb-ud-dev.conllu"
 	trees = parse_tree_conll(path)
 	stats = [tree_stats(tree) for tree in trees]
-	pprint(stats[0])
+	pprint(stats[:10])
