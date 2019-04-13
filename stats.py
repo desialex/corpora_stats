@@ -19,9 +19,9 @@ def tree_stats(tree, root_distance=0, gov_pos='ROOT'):
     stats['root_id'] = tree.token['id']
     rel = tree.token['deprel']
     pos = tree.token['upostag']
-    stats['rels'] = {rel  : {'branching' : {len(tree.children) : 1}, 
+    stats['rels'] = {rel  : {'branches' : {len(tree.children) : 1}, 
                                                      'count' : 1}}
-    stats['postags'] = {pos : {'branching' : {len(tree.children) : 1},
+    stats['postags'] = {pos : {'branches' : {len(tree.children) : 1},
                                                          'count' : 1}}
 
     # Get stats for all children (children_stats is a list of stat dictionaries)
