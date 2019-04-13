@@ -17,7 +17,6 @@ def tree_stats(tree, root_distance=0, gov_pos='ROOT'):
     # Initialize dictionary
     stats = {}
     stats['root_id'] = tree.token['id']
-    stats['root_pos'] = tree.token['upostag']
     rel = tree.token['deprel']
     pos = tree.token['upostag']
     stats['rels'] = {rel  : {'branching' : {len(tree.children) : 1}, 
