@@ -44,6 +44,7 @@
 	- [x] proportion of branches to the right of the node = right / all branches
 
 * __Per POS / rel__
+
 	*Branch distribution stats*
 	- [x] mean = all the numbers in the set / the amount of numbers in the set
 	- [x] median = the middle point of the number set
@@ -56,6 +57,7 @@
 	- [x] anova = comparison of two distributions
 
 * __Per rel per pos_pair__
+
 	*pos_pairs distribution stats*
 	- [x] mean = all the numbers in the set / the amount of numbers in the set
 	- [x] median = the middle point of the number set
