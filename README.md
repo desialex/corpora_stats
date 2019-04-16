@@ -56,9 +56,9 @@
 	- [x] entropy = degree of randomness (diversity)
 	- [x] anova = comparison of two distributions
 
-* __Per rel per pos_pair__
+* __Per rel__
 
-	*pos_pairs distribution stats*
+	*Pos_pairs distribution stats*
 	- [x] mean = all the numbers in the set / the amount of numbers in the set
 	- [x] median = the middle point of the number set
 	- [x] variance = measures dispersion within the data set
