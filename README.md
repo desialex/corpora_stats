@@ -1,6 +1,6 @@
 # Corpora stats project
 
-### __Tree stats__ :white_check_mark:
+### __Tree stats__ :deciduous_tree:
 
 * __Per node__ :
 	- [x] weight = number of nodes
@@ -25,13 +25,24 @@
 	- [ ] branch length = branch depth
 	- [ ] branch thickness = branch weight
 
-### __Corpus stats__ 
+### __Corpus stats__ :ledger:
 
 * __Global__	
 	- [x] mean weight
 	- [x] mean depth
 	- [x] MDD
 	- [x] HDD
+
+	*Pos_rel_pos distribution stats*
+	- [x] mean = all the numbers in the set / the amount of numbers in the set
+	- [x] median = the middle point of the number set
+	- [x] variance = measures dispersion within the data set
+	- [x] standard deviation = measures spread around the mean
+	- [x] range = the difference between the 75th and 25th percentile of the data (similar to _std_ but more robust against outliers)
+	- [x] skew = horizontal position of the tail 
+	- [x] kurtosis = vertical position of the tail 
+	- [x] entropy = degree of randomness (diversity)
+	- [x] anova = comparison of two distributions
 
 * __Per POS / rel__
 
