@@ -184,14 +184,14 @@ def corpus_stats(trees):
         corpus['rels'][rel]['branches']['anova'] = stats.f_oneway(items_rdist, branches_rdist)[0] # correlation
         
         # Pos-pairs counts
-        corpus['rels'][rel]['pos_pairs'] = dict()
-        corpus['rels'][rel]['pos_pairs']['r_pos_pairs_patns'] = pos_pairs / pos_pairs_sum
-        
-        # Pos-pairs distribution
         pos_pairs = sum([v for v in dic['pos_pairs'].values()])
         pos_pairs_dist = sorted([v for v in dic['pos_pairs'].values()], reverse=True)
         pos_pairs_rdist = sorted([v / pos_pairs for v in dic['pos_pairs'].values()], reverse=True)
         
+        corpus['rels'][rel]['pos_pairs'] = dict()
+        corpus['rels'][rel]['pos_pairs']['r_pos_pairs_patns'] = pos_pairs / pos_pairs_sum
+        
+        # Pos-pairs distribution
         corpus['rels'][rel]['pos_pairs']['std'] = np.std(pos_pairs_rdist) # spread
         corpus['rels'][rel]['pos_pairs']['var'] = np.var(pos_pairs_rdist) # spread
         corpus['rels'][rel]['pos_pairs']['skew'] = stats.skew(pos_pairs_dist) # shape
