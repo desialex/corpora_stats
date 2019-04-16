@@ -95,10 +95,13 @@ def merge_dicts(dicts):
 def corpus_stats(trees):
     merged = merge_dicts(tree_stats(tree) for tree in trees)
     
-    items = sum([rel['count'] for rel in merged['rels'].values()]) # items = nodes = edges
+    # Distributions
     rels_branch_patns = sum([len(rel['branches']) for rel in merged['rels'].values()])
     pos_branch_patns = sum([len(pos['branches']) for pos in merged['postags'].values()])
-    items_rdist = [v / items for v in od(sorted(merge_dicts(rel['branches'] for rel in merged['rels'].values()).items())).values()]
+    items_rdist = [v / merged['weight'] for v in merge_dicts(rel['branches'] for rel in merged['rels'].values()).values()]
+    pos_pairs_sum = len(merge_dicts(dic['pos_pairs'] for dic in merged['rels'].values())) # total unique pos_pairs
+    pos_pairs_set = merge_dicts(dic['pos_pairs'] for dic in merged['rels'].values())
+    pos_pairs_corpus_rdist = [p / pos_pairs_sum for p in pos_pairs_set.values()]
     
     # Create a new dictionary
     corpus = {}
@@ -113,53 +116,73 @@ def corpus_stats(trees):
 
     for pos,dic in merged['postags'].items():
         # Pos counts
-        corpus['postags'][pos]['r_freq'] = dic['count'] / items
-        corpus['postags'][pos]['avg_freq'] = dic['count'] / len(trees) 
+        corpus['postags'][pos]['r_freq'] = dic['count'] / merged['weight']
+        #corpus['postags'][pos]['avg_freq'] = (dic['count'] / len(trees)) / corpus['weight'] = r_freq
         
         # Branch counts
-        corpus['postags'][pos]['r_branch_patns'] = len(dic['branches']) / pos_branch_patns 
-        corpus['postags'][pos]['left'] = dic['left'] / (dic['left'] + dic['right']) if dic['left'] > 0 else 0 
-        corpus['postags'][pos]['right'] = dic['right'] / (dic['left'] + dic['right']) if dic['right'] > 0 else 0        
+        corpus['postags'][pos]['branches'] = dict()
+        corpus['postags'][pos]['branches']['r_branch_patns'] = len(dic['branches']) / pos_branch_patns 
+        corpus['postags'][pos]['branches']['left'] = dic['left'] / (dic['left'] + dic['right']) if dic['left'] > 0 else 0 
+        corpus['postags'][pos]['branches']['right'] = dic['right'] / (dic['left'] + dic['right']) if dic['right'] > 0 else 0        
 
         # Branch patterns distribution
         branches_sum = sum([v for v in dic['branches'].values()])
         branches_dist = [v for v in od(sorted(dic['branches'].items())).values()]
         branches_rdist = [v / branches_sum for v in od(sorted(dic['branches'].items())).values()]
         
-        corpus['postags'][pos]['std'] = np.std(branches_rdist) # spread
-        corpus['postags'][pos]['var'] = np.var(branches_rdist) # spread
-        corpus['postags'][pos]['skew'] = stats.skew(branches_dist) # shape
-        corpus['postags'][pos]['mean'] = np.mean(branches_rdist) # location
-        corpus['postags'][pos]['range'] = stats.iqr(branches_rdist) # spread
-        corpus['postags'][pos]['median'] = np.median(branches_rdist) # location
-        corpus['postags'][pos]['kurtosis'] = stats.kurtosis(branches_dist) # shape
-        corpus['postags'][pos]['entropy'] = stats.entropy(branches_rdist) # location
-        corpus['postags'][pos]['anova'] = stats.f_oneway(items_rdist, branches_rdist)[0] # correlation (to remove?)
+        corpus['postags'][pos]['branches']['std'] = np.std(branches_rdist) # spread
+        corpus['postags'][pos]['branches']['var'] = np.var(branches_rdist) # spread
+        corpus['postags'][pos]['branches']['skew'] = stats.skew(branches_dist) # shape
+        corpus['postags'][pos]['branches']['mean'] = np.mean(branches_rdist) # location
+        corpus['postags'][pos]['branches']['range'] = stats.iqr(branches_rdist) # spread
+        corpus['postags'][pos]['branches']['median'] = np.median(branches_rdist) # location
+        corpus['postags'][pos]['branches']['kurtosis'] = stats.kurtosis(branches_dist) # shape
+        corpus['postags'][pos]['branches']['entropy'] = stats.entropy(branches_rdist) # spread
+        corpus['postags'][pos]['branches']['anova'] = stats.f_oneway(items_rdist, branches_rdist)[0] # correlation
 
     for rel,dic in merged['rels'].items():
         # Rel counts
-        corpus['rels'][rel]['r_freq'] = dic['count'] / items
-        corpus['rels'][rel]['avg_freq'] = dic['count'] / len(trees)
+        corpus['rels'][rel]['r_freq'] = dic['count'] / merged['weight']
+        #corpus['rels'][rel]['avg_freq'] = dic['count'] / len(trees)
         
         # Branch counts
-        corpus['rels'][rel]['r_branch_patns'] = len(dic['branches']) / rels_branch_patns
-        corpus['rels'][rel]['left'] = dic['left'] / (dic['left'] + dic['right']) if dic['left'] > 0 else 0 
-        corpus['rels'][rel]['right'] = dic['right'] / (dic['left'] + dic['right']) if dic['right'] > 0 else 0
+        corpus['rels'][rel]['branches'] = dict()
+        corpus['rels'][rel]['branches']['r_branch_patns'] = len(dic['branches']) / rels_branch_patns
+        corpus['rels'][rel]['branches']['left'] = dic['left'] / (dic['left'] + dic['right']) if dic['left'] > 0 else 0 
+        corpus['rels'][rel]['branches']['right'] = dic['right'] / (dic['left'] + dic['right']) if dic['right'] > 0 else 0
        
         # Branch patterns distribution
         branches_sum = sum([v for v in dic['branches'].values()])
         branches_dist = [v for v in od(sorted(dic['branches'].items())).values()]
         branches_rdist = [v / branches_sum for v in od(sorted(dic['branches'].items())).values()]
         
-        corpus['rels'][rel]['std'] = np.std(branches_rdist) # spread
-        corpus['rels'][rel]['var'] = np.var(branches_rdist) # spread
-        corpus['rels'][rel]['skew'] = stats.skew(branches_dist) # shape
-        corpus['rels'][rel]['mean'] = np.mean(branches_rdist) # location
-        corpus['rels'][rel]['range'] = stats.iqr(branches_rdist) # spread
-        corpus['rels'][rel]['median'] = np.median(branches_rdist) # location
-        corpus['rels'][rel]['kurtosis'] = stats.kurtosis(branches_dist) # shape
-        corpus['rels'][rel]['entropy'] = stats.entropy(branches_rdist) # location
-        corpus['rels'][rel]['anova'] = stats.f_oneway(items_rdist, branches_rdist)[0] # correlation (to remove?)
+        corpus['rels'][rel]['branches']['std'] = np.std(branches_rdist) # spread
+        corpus['rels'][rel]['branches']['var'] = np.var(branches_rdist) # spread
+        corpus['rels'][rel]['branches']['skew'] = stats.skew(branches_dist) # shape
+        corpus['rels'][rel]['branches']['mean'] = np.mean(branches_rdist) # location
+        corpus['rels'][rel]['branches']['range'] = stats.iqr(branches_rdist) # spread
+        corpus['rels'][rel]['branches']['median'] = np.median(branches_rdist) # location
+        corpus['rels'][rel]['branches']['kurtosis'] = stats.kurtosis(branches_dist) # shape
+        corpus['rels'][rel]['branches']['entropy'] = stats.entropy(branches_rdist) # spread
+        corpus['rels'][rel]['branches']['anova'] = stats.f_oneway(items_rdist, branches_rdist)[0] # correlation
+        
+        # Pos-pairs counts
+        pos_pairs = sum([v for v in dic['pos_pairs'].values()])
+        pos_pairs_dist = sorted([v for v in dic['pos_pairs'].values()], reverse=True)
+        pos_pairs_rdist = sorted([v / pos_pairs for v in dic['pos_pairs'].values()], reverse=True)
+        
+        corpus['rels'][rel]['pos_pairs'] = dict()
+        corpus['rels'][rel]['pos_pairs']['r_count'] = pos_pairs / pos_pairs_sum
+        
+        # Pos-pairs distribution
+        corpus['rels'][rel]['pos_pairs']['std'] = np.std(pos_pairs_rdist) # spread
+        corpus['rels'][rel]['pos_pairs']['var'] = np.var(pos_pairs_rdist) # spread
+        corpus['rels'][rel]['pos_pairs']['skew'] = stats.skew(pos_pairs_dist) # shape
+        corpus['rels'][rel]['pos_pairs']['mean'] = np.mean(pos_pairs_rdist) # location
+        corpus['rels'][rel]['pos_pairs']['median'] = np.median(pos_pairs_rdist) # location
+        corpus['rels'][rel]['pos_pairs']['kurtosis'] = stats.kurtosis(pos_pairs_dist) # shape
+        corpus['rels'][rel]['pos_pairs']['entropy'] = stats.entropy(pos_pairs_rdist) # spread
+        corpus['rels'][rel]['pos_pairs']['anova'] = stats.f_oneway(pos_pairs_corpus_rdist, pos_pairs_rdist)[0] # correlation
 
     return corpus
 
