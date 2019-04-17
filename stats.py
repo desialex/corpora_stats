@@ -21,14 +21,14 @@ def tree_stats(tree, root_distance=0, gov_pos='ROOT'):
     stats['root_id'] = tree.token['id']
     rel = tree.token['deprel']
     pos = tree.token['upostag']
-    stats['rels'] = {rel: {'branches': {len(tree.children): 1}, 
+    stats['rels'] = {rel: {'branches': {len(tree.children): 1},
                            'count': 1}}
-    stats['postags'] = {pos: {'branches': {len(tree.children): 1}, 
+    stats['postags'] = {pos: {'branches': {len(tree.children): 1},
                               'count': 1}}
 
     # Get stats for all children (children_stats is a list of stat dictionaries)
     children_stats = [tree_stats(child, root_distance+1, tree.token['upostag']) for child in tree.children]
-    
+
     # Weight and depth
     stats['weight'] = sum([c['weight'] for c in children_stats]) + 1
     stats['depth'] = max([c['depth'] for c in children_stats], default=-1) + 1
@@ -45,7 +45,7 @@ def tree_stats(tree, root_distance=0, gov_pos='ROOT'):
     # Mean dependency distance and mean hierarchical distance
     if stats['weight'] > 1:
         stats['mdd'] = stats['ddsum'] / (stats['weight'] - 1)
-        stats['mhd'] = stats['hdsum'] / (stats['weight'] - 1)    
+        stats['mhd'] = stats['hdsum'] / (stats['weight'] - 1)
     else:
         stats['mdd'] = 0
         stats['mhd'] = 0
@@ -59,7 +59,7 @@ def tree_stats(tree, root_distance=0, gov_pos='ROOT'):
     stats['postags'][pos]['right'] = right
     stats['postags'][pos]['left'] = left
     stats['postags'] = merge_dicts([stats['postags']] + [c['postags'] for c in children_stats])
-    
+
     # Gov and dep POS for relations
     stats['rels'][rel]['pos_pairs'] = {(gov_pos, pos): 1}
 
@@ -94,31 +94,31 @@ def merge_dicts(dicts):
 
 def corpus_stats(trees):
     merged = merge_dicts(tree_stats(tree) for tree in trees)
-    
+
     # Distributions
     rels_branch_patns = sum([len(rel['branches']) for rel in merged['rels'].values()])
     pos_branch_patns = sum([len(pos['branches']) for pos in merged['postags'].values()])
     items_rdist = [v / merged['weight'] for v in merge_dicts(rel['branches'] for rel in merged['rels'].values()).values()]
     pos_pairs_sum = len(merge_dicts(dic['pos_pairs'] for dic in merged['rels'].values())) # total unique pos_pairs
     pos_pairs_set = merge_dicts(dic['pos_pairs'] for dic in merged['rels'].values())
-    pos_pairs_set_rdist = [p / pos_pairs_sum for p in pos_pairs_set.values()]  
-    
+    pos_pairs_set_rdist = [p / pos_pairs_sum for p in pos_pairs_set.values()]
+
     # Create a new dictionary
     corpus = {}
-    corpus['rels'] = {rel: dict() for rel in merged['rels']}    
+    corpus['rels'] = {rel: dict() for rel in merged['rels']}
     corpus['postags'] = {pos: dict() for pos in merged['postags']}
-    
+
     # Corpus stats
     corpus['mdd'] = merged['mdd'] / len(trees) # MDD
     corpus['mhd'] = merged['mhd'] / len(trees) # MHD
     corpus['depth'] = merged['depth'] / len(trees) # mean depth
     corpus['weight'] = merged['weight'] / len(trees) # mean weight
-    
+
     # Pos-rel-pos distribution stats
     pos_rel_pos = {(key[0], rel, key[1]): value for rel,dic in merged['rels'].items() for key,value in dic['pos_pairs'].items()}
     pos_rel_pos_dist = sorted([v for v in pos_rel_pos.values()], reverse=True)
     pos_rel_pos_rdist = [v / sum(pos_rel_pos_dist) for v in pos_rel_pos_dist]
-    
+
     corpus['pos_rel_pos'] = dict()
     corpus['pos_rel_pos']['std'] = np.std(pos_rel_pos_rdist) # spread
     corpus['pos_rel_pos']['var'] = np.var(pos_rel_pos_rdist) # spread
@@ -130,22 +130,22 @@ def corpus_stats(trees):
     corpus['pos_rel_pos']['entropy'] = stats.entropy(pos_rel_pos_rdist) # spread
 
     for pos,dic in merged['postags'].items():
-        
+
         # Pos counts
         corpus['postags'][pos]['r_freq'] = dic['count'] / merged['weight']
         #corpus['postags'][pos]['avg_freq'] = (dic['count'] / len(trees)) / corpus['weight'] = r_freq
-        
+
         # Branch counts
         corpus['postags'][pos]['branches'] = dict()
-        corpus['postags'][pos]['branches']['r_branch_patns'] = len(dic['branches']) / pos_branch_patns 
-        corpus['postags'][pos]['branches']['left'] = dic['left'] / (dic['left'] + dic['right']) if dic['left'] > 0 else 0 
-        corpus['postags'][pos]['branches']['right'] = dic['right'] / (dic['left'] + dic['right']) if dic['right'] > 0 else 0        
+        corpus['postags'][pos]['branches']['r_branch_patns'] = len(dic['branches']) / pos_branch_patns
+        corpus['postags'][pos]['branches']['left'] = dic['left'] / (dic['left'] + dic['right']) if dic['left'] > 0 else 0
+        corpus['postags'][pos]['branches']['right'] = dic['right'] / (dic['left'] + dic['right']) if dic['right'] > 0 else 0
 
         # Branch patterns distribution
         branches_sum = sum([v for v in dic['branches'].values()])
         branches_dist = [v for v in od(sorted(dic['branches'].items())).values()]
         branches_rdist = [v / branches_sum for v in od(sorted(dic['branches'].items())).values()]
-        
+
         corpus['postags'][pos]['branches']['std'] = np.std(branches_rdist) # spread
         corpus['postags'][pos]['branches']['var'] = np.var(branches_rdist) # spread
         corpus['postags'][pos]['branches']['skew'] = stats.skew(branches_dist) # shape
@@ -157,22 +157,22 @@ def corpus_stats(trees):
         corpus['postags'][pos]['branches']['anova'] = stats.f_oneway(items_rdist, branches_rdist)[0] # correlation
 
     for rel,dic in merged['rels'].items():
-        
+
         # Rel counts
         corpus['rels'][rel]['r_freq'] = dic['count'] / merged['weight']
         #corpus['rels'][rel]['avg_freq'] = dic['count'] / len(trees)
-        
+
         # Branch counts
         corpus['rels'][rel]['branches'] = dict()
         corpus['rels'][rel]['branches']['r_branch_patns'] = len(dic['branches']) / rels_branch_patns
-        corpus['rels'][rel]['branches']['left'] = dic['left'] / (dic['left'] + dic['right']) if dic['left'] > 0 else 0 
+        corpus['rels'][rel]['branches']['left'] = dic['left'] / (dic['left'] + dic['right']) if dic['left'] > 0 else 0
         corpus['rels'][rel]['branches']['right'] = dic['right'] / (dic['left'] + dic['right']) if dic['right'] > 0 else 0
-       
+
         # Branch patterns distribution
         branches_sum = sum([v for v in dic['branches'].values()])
         branches_dist = [v for v in od(sorted(dic['branches'].items())).values()]
         branches_rdist = [v / branches_sum for v in od(sorted(dic['branches'].items())).values()]
-        
+
         corpus['rels'][rel]['branches']['std'] = np.std(branches_rdist) # spread
         corpus['rels'][rel]['branches']['var'] = np.var(branches_rdist) # spread
         corpus['rels'][rel]['branches']['skew'] = stats.skew(branches_dist) # shape
@@ -182,15 +182,15 @@ def corpus_stats(trees):
         corpus['rels'][rel]['branches']['kurtosis'] = stats.kurtosis(branches_dist) # shape
         corpus['rels'][rel]['branches']['entropy'] = stats.entropy(branches_rdist) # spread
         corpus['rels'][rel]['branches']['anova'] = stats.f_oneway(items_rdist, branches_rdist)[0] # correlation
-        
+
         # Pos-pairs counts
         pos_pairs = sum([v for v in dic['pos_pairs'].values()])
         pos_pairs_dist = sorted([v for v in dic['pos_pairs'].values()], reverse=True)
         pos_pairs_rdist = sorted([v / pos_pairs for v in dic['pos_pairs'].values()], reverse=True)
-        
+
         corpus['rels'][rel]['pos_pairs'] = dict()
         corpus['rels'][rel]['pos_pairs']['r_pos_pairs_patns'] = pos_pairs / pos_pairs_sum
-        
+
         # Pos-pairs distribution
         corpus['rels'][rel]['pos_pairs']['std'] = np.std(pos_pairs_rdist) # spread
         corpus['rels'][rel]['pos_pairs']['var'] = np.var(pos_pairs_rdist) # spread
@@ -204,6 +204,29 @@ def corpus_stats(trees):
 
     return corpus
 
+def keyset(dicts):
+    """Returns the list of all keys found a number of dictionaries"""
+    return sorted(set([k for d in dicts for k in d.keys()]))
+
+def normalize_values(d):
+    """Normalize the values of a dictionary"""
+    n = sum(d.values())
+    return {k:v/n for (k,v) in d.items()}
+
+def vectorize_dicts(dicts):
+    """Returns a list of normalized vectors for a list of dictionaries"""
+    keys = keyset(dicts)
+    vectors = []
+    for d in dicts:
+        d = normalize_values(d)
+        vector = []
+        for k in keys:
+            if k in d.keys():
+                vector.append(d[k])
+            else:
+                vector.append(0)
+        vectors.append(vector)
+    return vectors
 
 if __name__ == "__main__":
     path = "data/fr_ftb-ud-dev.conllu"
