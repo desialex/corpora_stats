@@ -6,3 +6,7 @@ __pycache__/stats.cpython-37.pyc
 *.ipynb
 .DS_Store
 __pycache__/
+*.fdb_latexmk
+*.fls
+*.log
+*.aux
