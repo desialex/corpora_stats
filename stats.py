@@ -239,11 +239,18 @@ def get_vectors(dicts):
 
 
 if __name__ == "__main__":
-    files = ['data/'+f for f in os.listdir('data') if f.endswith('.conllu') and f.startswith('test')]
-    corpora = {}
-    for file in files:
-        lng = file[5:-7]
-        print(lng)
-        trees = parse_tree_conll(file)
-        corpora[lng] = flatten(corpus_stats(trees))
-    pprint(corpora)
+#     files = ['data/'+f for f in os.listdir('data') if f.endswith('.conllu') and f.startswith('test')]
+#     corpora = {}
+#     for file in files:
+#         lng = file[5:-7]
+#         print(lng)
+#         trees = parse_tree_conll(file)
+#         corpora[lng] = flatten(corpus_stats(trees))
+#     pprint(corpora)
+    path = "data/fr_ftb-ud-dev.conllu"
+    trees = parse_tree_conll(path)
+    c1 = corpus_stats(trees[:100])
+    c2 = corpus_stats(trees[101:200])
+    corpora = [c1, c2]
+    vectors = get_vectors(corpora)
+    print(vectors)
