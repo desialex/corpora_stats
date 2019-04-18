@@ -210,6 +210,34 @@ def flatten(dictionary):
             vector = np.append(vector, v)
     return vector
 
+
+def vectorize(dic, keyset, section):
+    """Creates a normalized vector per keyset"""
+    vector = np.array([])
+    key_len = 0
+    for key in keyset:
+        if key in dic[section]:
+            key_len = len(flatten(dic[section][key]))
+            vector = np.append(vector, flatten(dic[section][key]))
+        else: 
+            vector = np.append(vector, [0]*key_len)
+    return vector
+        
+
+def get_vectors(dicts):
+    """Transforms dicts to equal length vectors"""
+    pos_keyset = keyset([c['postags'] for c in dicts])
+    rel_keyset = keyset([c['rels'] for c in dicts])
+    
+    v0 = [list(v for (k,v) in dic.items() if not isinstance(dic[k], dict)) for dic in dicts] # maybe also od(dict)?
+    v1 = [vectorize(dic, pos_keyset, 'postags') for dic in dicts]
+    v2 = [vectorize(dic, rel_keyset, 'rels') for dic in dicts]
+    v3 = np.array(vectorize_dicts([dic['pos_rel_pos'] for dic in dicts]))
+    vectors = [np.concatenate([a for a in v]) for v in list(zip(v0, v1, v2, v3))]
+
+    return vectors
+
+
 if __name__ == "__main__":
     files = ['data/'+f for f in os.listdir('data') if f.endswith('.conllu') and f.startswith('test')]
     corpora = {}
