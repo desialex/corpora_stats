@@ -9,6 +9,7 @@ import collections.abc
 from collections import OrderedDict as od
 from pprint import pprint
 from scipy import stats
+import os
 
 # ---- Project libraries -------------------------------------------------------
 from conll import load_conll, parse_conll, parse_tree_conll
@@ -228,9 +229,26 @@ def vectorize_dicts(dicts):
         vectors.append(vector)
     return vectors
 
+def flatten(dictionary):
+    """Flattens a dictionary (and embedded dictionaries) to a vector"""
+    ordered = od(dictionary)
+    vector = np.array([])
+    for k, v in ordered.items():
+        if isinstance(v, dict):
+            # np.append doesn't work like list.append
+            # if the element to append is a list, it is
+            # concatenated element-wise
+            vector = np.append(vector, flatten(v))
+        else:
+            vector = np.append(vector, v)
+    return vector
+
 if __name__ == "__main__":
-    path = "data/fr_ftb-ud-dev.conllu"
-    trees = parse_tree_conll(path)
-#     stats = [tree_stats(tree) for tree in trees]
-#     pprint(stats[0])
-    pprint(corpus_stats(trees[:100]))
+    files = ['data/'+f for f in os.listdir('data') if f.endswith('.conllu') and f.startswith('test')]
+    corpora = {}
+    for file in files:
+        lng = file[5:-7]
+        print(lng)
+        trees = parse_tree_conll(file)
+        corpora[lng] = flatten(corpus_stats(trees))
+    pprint(corpora)
