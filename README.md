@@ -33,28 +33,16 @@
 	- [x] MDD
 	- [x] HDD
 
-	*Pos_rel_pos distribution stats*
-	- [x] mean = all the numbers in the set / the amount of numbers in the set
-	- [x] median = the middle point of the number set
-	- [x] variance = measures dispersion within the data set
-	- [x] standard deviation = measures spread around the mean
-	- [x] range = the difference between the 75th and 25th percentile of the data (similar to _std_ but more robust against outliers)
-	- [x] skew = horizontal position of the tail 
-	- [x] kurtosis = vertical position of the tail 
-	- [x] entropy = degree of randomness (diversity)
-	- [x] anova = comparison of two distributions
-
 * __Per POS / rel__
 
 	*Counts*
 	- [x] relative frequency of a pos = pos count / all pos counts
+	- [ ] coverage = the proportion of all sentences containing the rel/pos
 
 	*Branch counts*
 	- [x] relative number of branch patterns = branch patterns / all branch patterns
 	- [x] proportion of branches to the left of the node = left / all branches
 	- [x] proportion of branches to the right of the node = right / all branches
-
-* __Per POS / rel__
 
 	*Branch distribution stats*
 	- [x] mean = all the numbers in the set / the amount of numbers in the set
@@ -69,16 +57,8 @@
 
 * __Per rel__
 
-	*Pos_pairs distribution stats*
-	- [x] mean = all the numbers in the set / the amount of numbers in the set
-	- [x] median = the middle point of the number set
-	- [x] variance = measures dispersion within the data set
-	- [x] standard deviation = measures spread around the mean
-	- [x] range = the difference between the 75th and 25th percentile of the data (similar to _std_ but more robust against outliers)
-	- [x] skew = horizontal position of the tail 
-	- [x] kurtosis = vertical position of the tail 
-	- [x] entropy = degree of randomness (diversity)
-	- [x] anova = comparison of two distributions
+	*Pos_pairs stats*
+	- [x] relative quantity of pos-pairs = number of pos-pairs per relation / total number of pos-pair patterns
 
 * __Misc__
 	- [ ] mean branch length per relation

@@ -10,6 +10,7 @@ from collections import OrderedDict as od
 from pprint import pprint
 from scipy import stats
 import os
+import pickle
 
 # ---- Project libraries -------------------------------------------------------
 from conll import load_conll, parse_conll, parse_tree_conll
@@ -239,7 +240,12 @@ def get_vectors(dicts):
 
 
 if __name__ == "__main__":
-    files = ['data/'+f for f in os.listdir('data') if f.endswith('.conllu') and f.startswith('test')]
+    dir = '/Users/desialex/UD2/'
+    languages = [f[:-7] for f in os.listdir(dir) if f.endswith('.conllu')]
+    files = [dir+'/'+lng+'.conllu' for lng in languages]
     corpora = [corpus_stats(parse_tree_conll(file)) for file in files]
     vectors = get_vectors(corpora)
-    pprint(vectors)
+    np.save('vectors', vectors)
+    data = dict(zip(languages, vectors))
+    with open('stats.pickle', 'wb') as f:
+        pickle.dump(data, f)
