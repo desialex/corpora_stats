@@ -217,11 +217,17 @@ def vectorize(dic, keyset, section):
     vector = np.array([])
     key_len = 0
     for key in keyset:
-        if key in dic[section]:
-            key_len = len(flatten(dic[section][key]))
-            vector = np.append(vector, flatten(dic[section][key]))
-        else:
-            vector = np.append(vector, [0]*key_len)
+        # To be rewritten!
+        if section == 'postags':
+            if key in dic[section]:
+                vector = np.append(vector, flatten(dic[section][key]))
+            else:
+                vector = np.append(vector, [0]*13) # hardcoded value
+        else: # section == 'rels'
+            if key in dic[section]:
+                vector = np.append(vector, flatten(dic[section][key]))
+            else:
+                vector = np.append(vector, [0]*14) # hardcoded value
     return vector
 
 
