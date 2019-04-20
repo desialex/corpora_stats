@@ -18,7 +18,7 @@ def load_conll(path_to_file: str)->str:
     :param path_to_file: Path to the conll file
     :returns: the file content as a single string
     """
-    with open(path_to_file, 'r') as conll:
+    with open(path_to_file, 'r', encoding='utf-8', errors='ignore') as conll:
         lines = [line for line in conll.readlines() 
                  if not re.search(r'\d+-\d+', line)]
     return ''.join(lines)
@@ -45,6 +45,7 @@ def parse_tree_conll(path_to_file: str)->list:
     :param path_to_file: Path to the conll file
     :returns: a list of sentences as TokenTree objects
     """
+    
     return parse_tree(load_conll(path_to_file))
     
 
