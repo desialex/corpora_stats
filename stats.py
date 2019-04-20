@@ -96,19 +96,19 @@ def merge_dicts(dicts):
 
 def corpus_stats(trees):
     merged = merge_dicts(tree_stats(tree) for tree in trees)
-    
+
     # Distributions
     rels_branch_patns = sum([len(rel['branches']) for rel in merged['rels'].values()])
     pos_branch_patns = sum([len(pos['branches']) for pos in merged['postags'].values()])
     items_rdist = [v / merged['weight'] for v in merge_dicts(rel['branches'] for rel in merged['rels'].values()).values()]
     pos_pairs_sum = len(merge_dicts(dic['pos_pairs'] for dic in merged['rels'].values())) # total unique pos_pairs
-    
+
     # Create a new dictionary
     corpus = {}
-    corpus['rels'] = {rel: dict() for rel in merged['rels']}    
+    corpus['rels'] = {rel: dict() for rel in merged['rels']}
     corpus['postags'] = {pos: dict() for pos in merged['postags']}
     corpus['pos_rel_pos'] = {(key[0], rel, key[1]): value for rel,dic in merged['rels'].items() for key,value in dic['pos_pairs'].items()}
-    
+
     # Corpus stats
     corpus['mdd'] = merged['mdd'] / len(trees) # MDD
     corpus['mhd'] = merged['mhd'] / len(trees) # MHD
@@ -116,21 +116,21 @@ def corpus_stats(trees):
     corpus['weight'] = merged['weight'] / len(trees) # mean weight
 
     for pos,dic in merged['postags'].items():
-        
+
         # Pos counts
         corpus['postags'][pos]['r_freq'] = dic['count'] / merged['weight']
-        
+
         # Branch counts
         corpus['postags'][pos]['branches'] = dict()
-        corpus['postags'][pos]['branches']['r_branch_patns'] = len(dic['branches']) / pos_branch_patns 
-        corpus['postags'][pos]['branches']['left'] = dic['left'] / (dic['left'] + dic['right']) if dic['left'] > 0 else 0 
-        corpus['postags'][pos]['branches']['right'] = dic['right'] / (dic['left'] + dic['right']) if dic['right'] > 0 else 0        
+        corpus['postags'][pos]['branches']['r_branch_patns'] = len(dic['branches']) / pos_branch_patns
+        corpus['postags'][pos]['branches']['left'] = dic['left'] / (dic['left'] + dic['right']) if dic['left'] > 0 else 0
+        corpus['postags'][pos]['branches']['right'] = dic['right'] / (dic['left'] + dic['right']) if dic['right'] > 0 else 0
 
         # Branch patterns distribution
         branches_sum = sum([v for v in dic['branches'].values()])
         branches_dist = [v for v in od(sorted(dic['branches'].items())).values()]
         branches_rdist = [v / branches_sum for v in od(sorted(dic['branches'].items())).values()]
-        
+
         corpus['postags'][pos]['branches']['std'] = np.std(branches_rdist) # spread
         corpus['postags'][pos]['branches']['var'] = np.var(branches_rdist) # spread
         corpus['postags'][pos]['branches']['skew'] = stats.skew(branches_dist) # shape
@@ -142,21 +142,21 @@ def corpus_stats(trees):
         corpus['postags'][pos]['branches']['anova'] = stats.f_oneway(items_rdist, branches_rdist)[0] # correlation
 
     for rel,dic in merged['rels'].items():
-        
+
         # Rel counts
         corpus['rels'][rel]['r_freq'] = dic['count'] / merged['weight']
-        
+
         # Branch counts
         corpus['rels'][rel]['branches'] = dict()
         corpus['rels'][rel]['branches']['r_branch_patns'] = len(dic['branches']) / rels_branch_patns
-        corpus['rels'][rel]['branches']['left'] = dic['left'] / (dic['left'] + dic['right']) if dic['left'] > 0 else 0 
+        corpus['rels'][rel]['branches']['left'] = dic['left'] / (dic['left'] + dic['right']) if dic['left'] > 0 else 0
         corpus['rels'][rel]['branches']['right'] = dic['right'] / (dic['left'] + dic['right']) if dic['right'] > 0 else 0
-       
+
         # Branch patterns distribution
         branches_sum = sum([v for v in dic['branches'].values()])
         branches_dist = [v for v in od(sorted(dic['branches'].items())).values()]
         branches_rdist = [v / branches_sum for v in od(sorted(dic['branches'].items())).values()]
-        
+
         corpus['rels'][rel]['branches']['std'] = np.std(branches_rdist) # spread
         corpus['rels'][rel]['branches']['var'] = np.var(branches_rdist) # spread
         corpus['rels'][rel]['branches']['skew'] = stats.skew(branches_dist) # shape
@@ -166,11 +166,11 @@ def corpus_stats(trees):
         corpus['rels'][rel]['branches']['kurtosis'] = stats.kurtosis(branches_dist) # shape
         corpus['rels'][rel]['branches']['entropy'] = stats.entropy(branches_rdist) # spread
         corpus['rels'][rel]['branches']['anova'] = stats.f_oneway(items_rdist, branches_rdist)[0] # correlation
-        
+
         # Pos-pairs
         pos_pairs = sum([v for v in dic['pos_pairs'].values()])
         corpus['rels'][rel]['r_pos_pairs_patns'] = pos_pairs / pos_pairs_sum
-        
+
     return corpus
 
 def keyset(dicts):
@@ -220,16 +220,16 @@ def vectorize(dic, keyset, section):
         if key in dic[section]:
             key_len = len(flatten(dic[section][key]))
             vector = np.append(vector, flatten(dic[section][key]))
-        else: 
+        else:
             vector = np.append(vector, [0]*key_len)
     return vector
-        
+
 
 def get_vectors(dicts):
     """Transforms dicts to equal length vectors"""
     pos_keyset = keyset([c['postags'] for c in dicts])
     rel_keyset = keyset([c['rels'] for c in dicts])
-    
+
     v0 = [list(v for (k,v) in dic.items() if not isinstance(dic[k], dict)) for dic in dicts] # maybe also od(dict)?
     v1 = [vectorize(dic, pos_keyset, 'postags') for dic in dicts]
     v2 = [vectorize(dic, rel_keyset, 'rels') for dic in dicts]
@@ -240,7 +240,7 @@ def get_vectors(dicts):
 
 
 if __name__ == "__main__":
-    dir = '/Users/desialex/UD2/'
+    dir = 'data'
     languages = [f[:-7] for f in os.listdir(dir) if f.endswith('.conllu')]
     files = [dir+'/'+lng+'.conllu' for lng in languages]
     corpora = [corpus_stats(parse_tree_conll(file)) for file in files]
