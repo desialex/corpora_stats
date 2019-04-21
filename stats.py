@@ -170,9 +170,10 @@ def keyset(dicts):
     return sorted(set([k for d in dicts for k in d.keys()]))
 
 def normalize_values(d):
-    """Normalize the values of a dictionary"""
-    n = sum(d.values())
-    return {k:v/n for (k,v) in d.items()}
+    """Normalize the values of a dictionary (offset and scale)"""
+    values = np.array(d.values())
+    values = (values - values.min()) / (values.max() - values.min())
+    return dict(zip(d.keys(),values))
 
 def vectorize_dicts(dicts):
     """Returns a list of normalized vectors for a list of dictionaries"""
