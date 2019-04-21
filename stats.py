@@ -93,6 +93,18 @@ def merge_dicts(dicts):
         dict_merge(merged, d)
     return merged
 
+def describe_dist(dist, rdist, ref_rdist):
+    d = {}
+    d['std'] = np.std(rdist) # spread
+    d['var'] = np.var(rdist) # spread
+    d['skew'] = stats.skew(dist) # shape
+    d['mean'] = np.mean(rdist) # location
+    d['range'] = stats.iqr(rdist) # spread
+    d['median'] = np.median(rdist) # location
+    d['kurtosis'] = stats.kurtosis(dist) # shape
+    d['entropy'] = stats.entropy(rdist) # spread
+    d['anova'] = stats.f_oneway(ref_rdist, rdist)[0] # correlation
+    return d
 
 def corpus_stats(trees):
     merged = merge_dicts(tree_stats(tree) for tree in trees)
@@ -120,52 +132,32 @@ def corpus_stats(trees):
         # Pos counts
         corpus['postags'][pos]['r_freq'] = dic['count'] / merged['weight']
 
-        # Branch counts
-        corpus['postags'][pos]['branches'] = dict()
-        corpus['postags'][pos]['branches']['r_branch_patns'] = len(dic['branches']) / pos_branch_patns
-        corpus['postags'][pos]['branches']['left'] = dic['left'] / (dic['left'] + dic['right']) if dic['left'] > 0 else 0
-        corpus['postags'][pos]['branches']['right'] = dic['right'] / (dic['left'] + dic['right']) if dic['right'] > 0 else 0
-
         # Branch patterns distribution
         branches_sum = sum([v for v in dic['branches'].values()])
         branches_dist = [v for v in od(sorted(dic['branches'].items())).values()]
         branches_rdist = [v / branches_sum for v in od(sorted(dic['branches'].items())).values()]
+        corpus['postags'][pos]['branches'] = describe_dist(branches_dist, branches_rdist, items_rdist)
 
-        corpus['postags'][pos]['branches']['std'] = np.std(branches_rdist) # spread
-        corpus['postags'][pos]['branches']['var'] = np.var(branches_rdist) # spread
-        corpus['postags'][pos]['branches']['skew'] = stats.skew(branches_dist) # shape
-        corpus['postags'][pos]['branches']['mean'] = np.mean(branches_rdist) # location
-        corpus['postags'][pos]['branches']['range'] = stats.iqr(branches_rdist) # spread
-        corpus['postags'][pos]['branches']['median'] = np.median(branches_rdist) # location
-        corpus['postags'][pos]['branches']['kurtosis'] = stats.kurtosis(branches_dist) # shape
-        corpus['postags'][pos]['branches']['entropy'] = stats.entropy(branches_rdist) # spread
-        corpus['postags'][pos]['branches']['anova'] = stats.f_oneway(items_rdist, branches_rdist)[0] # correlation
+        # Branch counts
+        corpus['postags'][pos]['branches']['r_branch_patns'] = len(dic['branches']) / pos_branch_patns
+        corpus['postags'][pos]['branches']['left'] = dic['left'] / (dic['left'] + dic['right']) if dic['left'] > 0 else 0
+        corpus['postags'][pos]['branches']['right'] = dic['right'] / (dic['left'] + dic['right']) if dic['right'] > 0 else 0
 
     for rel,dic in merged['rels'].items():
 
         # Rel counts
         corpus['rels'][rel]['r_freq'] = dic['count'] / merged['weight']
 
-        # Branch counts
-        corpus['rels'][rel]['branches'] = dict()
-        corpus['rels'][rel]['branches']['r_branch_patns'] = len(dic['branches']) / rels_branch_patns
-        corpus['rels'][rel]['branches']['left'] = dic['left'] / (dic['left'] + dic['right']) if dic['left'] > 0 else 0
-        corpus['rels'][rel]['branches']['right'] = dic['right'] / (dic['left'] + dic['right']) if dic['right'] > 0 else 0
-
         # Branch patterns distribution
         branches_sum = sum([v for v in dic['branches'].values()])
         branches_dist = [v for v in od(sorted(dic['branches'].items())).values()]
         branches_rdist = [v / branches_sum for v in od(sorted(dic['branches'].items())).values()]
+        corpus['rels'][rel]['branches'] = describe_dist(branches_dist, branches_rdist, items_rdist)
 
-        corpus['rels'][rel]['branches']['std'] = np.std(branches_rdist) # spread
-        corpus['rels'][rel]['branches']['var'] = np.var(branches_rdist) # spread
-        corpus['rels'][rel]['branches']['skew'] = stats.skew(branches_dist) # shape
-        corpus['rels'][rel]['branches']['mean'] = np.mean(branches_rdist) # location
-        corpus['rels'][rel]['branches']['range'] = stats.iqr(branches_rdist) # spread
-        corpus['rels'][rel]['branches']['median'] = np.median(branches_rdist) # location
-        corpus['rels'][rel]['branches']['kurtosis'] = stats.kurtosis(branches_dist) # shape
-        corpus['rels'][rel]['branches']['entropy'] = stats.entropy(branches_rdist) # spread
-        corpus['rels'][rel]['branches']['anova'] = stats.f_oneway(items_rdist, branches_rdist)[0] # correlation
+        # Branch counts
+        corpus['rels'][rel]['branches']['r_branch_patns'] = len(dic['branches']) / rels_branch_patns
+        corpus['rels'][rel]['branches']['left'] = dic['left'] / (dic['left'] + dic['right']) if dic['left'] > 0 else 0
+        corpus['rels'][rel]['branches']['right'] = dic['right'] / (dic['left'] + dic['right']) if dic['right'] > 0 else 0
 
         # Pos-pairs
         pos_pairs = sum([v for v in dic['pos_pairs'].values()])
@@ -244,14 +236,20 @@ def get_vectors(dicts):
 
     return vectors
 
+def test():
+    trees = parse_tree_conll('data/test1.conllu')
+    st = corpus_stats(trees)
+    print(len(trees), 'trees')
+    pprint(st)
 
 if __name__ == "__main__":
-    dir = 'data'
-    languages = [f[:-7] for f in os.listdir(dir) if f.endswith('.conllu')]
-    files = [dir+'/'+lng+'.conllu' for lng in languages]
-    corpora = [corpus_stats(parse_tree_conll(file)) for file in files]
-    vectors = get_vectors(corpora)
-    np.save('vectors', vectors)
-    data = dict(zip(languages, vectors))
-    with open('stats.pickle', 'wb') as f:
-        pickle.dump(data, f)
+    test()
+    # dir = 'data'
+    # languages = [f[:-7] for f in os.listdir(dir) if f.endswith('.conllu')]
+    # files = [dir+'/'+lng+'.conllu' for lng in languages]
+    # corpora = [corpus_stats(parse_tree_conll(file)) for file in files]
+    # vectors = get_vectors(corpora)
+    # np.save('vectors', vectors)
+    # data = dict(zip(languages, vectors))
+    # with open('stats.pickle', 'wb') as f:
+    #     pickle.dump(data, f)
