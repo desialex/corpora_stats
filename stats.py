@@ -139,35 +139,6 @@ def corpus_stats(trees):
 
     return corpus
 
-def vectorize_dicts(dicts):
-    """Returns a list of normalized vectors for a list of dictionaries"""
-    keys = keyset(dicts)
-    vectors = []
-    for d in dicts:
-        d = normalize_values(d)
-        vector = []
-        for k in keys:
-            if k in d.keys():
-                vector.append(d[k])
-            else:
-                vector.append(0)
-        vectors.append(vector)
-    return vectors
-
-def flatten(dictionary):
-    """Flattens a dictionary (and embedded dictionaries) to a vector"""
-    ordered = od(dictionary)
-    vector = np.array([])
-    for k, v in ordered.items():
-        if isinstance(v, dict):
-            # np.append doesn't work like list.append
-            # if the element to append is a list, it is
-            # concatenated element-wise
-            vector = np.append(vector, flatten(v))
-        else:
-            vector = np.append(vector, v)
-    return vector
-
 def vectorize(dic, keyset, section):
     """Creates a normalized vector per keyset"""
     vector = np.array([])
