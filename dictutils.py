@@ -28,11 +28,19 @@ def normalize_keys(d, keys):
 
 def normalize_values(d):
     """
-    Normalize the values of a single dictionary (offset and scale)
+    Normalize the values of a single dictionary (sum=1).
+    NOT recursive. Expects non-negative numerical values.
     """
-    values = np.array(d.values())
-    values = (values - values.min()) / (values.max() - values.min())
-    return dict(zip(d.keys(),values))
+    if not d: # empty dict
+        return d
+    else:
+        for v in d.values():
+            assert isinstance(v, (int, float)), 'Numerical value expected'
+            assert v >= 0, 'Non negative value expected'
+        values = np.array(list(d.values()))
+        if values.sum() != 0:
+            values = values / values.sum()
+        return dict(zip(d.keys(), values))
 
 def normalize_dicts(dicts):
     """
@@ -103,33 +111,71 @@ def merge_dicts(dicts):
 
 def dummies():
     """ Dummy dicts to use for testing"""
-    d0 = {}
-    d1 = {'a':5, 'c':{'e':2}}
-    d2 = {'a':3, 'b':3, 'c':{'e':4}, 'g':{}}
-    d3 = {'a':1, 'b':1, 'c':{'d':4, 'i':{'j':4}}, 'f':4, 'h':0}
-    return [d0, d1, d2, d3]
+    return [
+        {},
+        {'a':1, 'b':2},
+        {'a':5, 'c':{'e':2}},
+        {'a':3, 'b':3, 'c':{'e':4}, 'g':{}},
+        {'a':1, 'b':1, 'c':{'d':4, 'i':{'j':4}}, 'f':4, 'h':0}
+    ]
 
 def test_keyset():
-    dicts = dummies()
-    assert(keyset(dicts)==['a', 'b', 'c', 'f', 'g', 'h'])
-    assert(keyset(dicts, typed=True)==[('a', int), ('b', int), ('c', dict), ('f', int), ('g', dict), ('h', int)])
+    assert keyset(dummies())==['a', 'b', 'c', 'f', 'g', 'h']
+    assert keyset(dummies(), typed=True)==[('a', int), ('b', int), ('c', dict), ('f', int), ('g', dict), ('h', int)]
 
 def test_normalize_keys():
-    dicts = dummies()
-    keys = keyset(dicts, typed=True)
-    assert(normalize_keys(dicts[0], keys)=={'a': 0, 'b': 0, 'c': {}, 'f': 0, 'g': {}, 'h': 0})
-    assert(normalize_keys(dicts[1], keys)=={'a': 5, 'b': 0, 'c': {'e': 2}, 'f': 0, 'g': {}, 'h': 0})
-    dicts = dummies()
-    keys = keyset(dicts[0:0], typed=True)
-    assert(normalize_keys(dicts[0], keys)=={})
-    assert(normalize_keys(dicts[1], keys)=={'a': 5, 'c': {'e': 2}})
+    keys = keyset(dummies(), typed=True)
+    assert normalize_keys(dummies()[0], keys)=={'a': 0, 'b': 0, 'c': {}, 'f': 0, 'g': {}, 'h': 0}
+    assert normalize_keys(dummies()[2], keys)=={'a': 5, 'b': 0, 'c': {'e': 2}, 'f': 0, 'g': {}, 'h': 0}
+    keys = keyset(dummies()[0:0], typed=True)
+    assert normalize_keys(dummies()[0], keys)=={}
+    assert normalize_keys(dummies()[2], keys)=={'a': 5, 'c': {'e': 2}}
 
-# def test_normalize_values():
-# def test_normalize_dicts():
-# def test_mean_dict():
-# def test_merge_into():
-# def test_merge_dicts():
+def test_normalize_values():
+    assert normalize_values(dummies()[0]) == {}
+    assert normalize_values(dummies()[1]) == {'a': 0.3333333333333333, 'b': 0.6666666666666666}
+
+def test_normalize_dicts():
+    assert normalize_dicts(dummies()) == [
+        {'a': 0/5, 'b': 0.0, 'c': {'d': 0.0, 'e': 0.0, 'i': {'j': 0.0}}, 'f': 0.0, 'g': {}, 'h': 0.0},
+        {'a': 1/5, 'b': 2/3, 'c': {'d': 0.0, 'e': 0.0, 'i': {'j': 0.0}}, 'f': 0.0, 'g': {}, 'h': 0.0},
+        {'a': 5/5, 'b': 0.0, 'c': {'d': 0.0, 'e': 0.5, 'i': {'j': 0.0}}, 'f': 0.0, 'g': {}, 'h': 0.0},
+        {'a': 3/5, 'b': 1.0, 'c': {'d': 0.0, 'e': 1.0, 'i': {'j': 0.0}}, 'f': 0.0, 'g': {}, 'h': 0.0},
+        {'a': 1/5, 'b': 1/3, 'c': {'d': 1.0, 'e': 0.0, 'i': {'j': 1.0}}, 'f': 1.0, 'g': {}, 'h': 0.0}
+    ]
+    assert normalize_dicts(dummies()[0:1]) == [{}]
+    assert normalize_dicts(dummies()[1:3]) == [{'a': 0.0, 'b': 1.0, 'c': {'e': 0.0}}, {'a': 1.0, 'b': 0.0, 'c': {'e': 1.0}}]
+
+def test_mean_dict():
+    assert mean_dict(dummies()[0:1]) == {}
+    assert mean_dict(dummies()[0:3]) == {'a': 6/3, 'b': 2/3, 'c': {'e': 2/3}}
+    assert mean_dict(dummies()) == {'a': 10/5, 'b': 6/5, 'c': {'d': 4/5, 'e': 6/5, 'i': {'j': 4/5}}, 'f': 4/5, 'g': {}, 'h': 0/5}
+
+def test_merge_into():
+    d1 = dummies()[0]
+    d2 = dummies()[1]
+    d3 = dummies()[2]
+    d4 = dummies()[3]
+    d5 = dummies()[4]
+    merge_into(d1, d2)
+    assert d1 == d2
+    merge_into(d2, d3)
+    assert d2 == {'a': 6, 'b': 2, 'c': {'e': 2}}
+    merge_into(d5, d4)
+    assert d5 == {'a':4, 'b':4, 'c':{'d':4, 'e':4, 'i':{'j':4}}, 'f':4, 'g':{}, 'h':0}
+
+def test_merge_dicts():
+    assert merge_dicts([dummies()[0]]*2) == {}
+    assert merge_dicts(dummies()) == {'a': 10, 'b': 6, 'c': {'d': 4, 'e': 6, 'i': {'j': 4}}, 'f': 4, 'g': {}, 'h': 0}
 
 def test():
     test_keyset()
     test_normalize_keys()
+    test_normalize_values()
+    test_normalize_dicts()
+    test_mean_dict()
+    test_merge_into()
+    test_merge_dicts()
+
+if __name__ == "__main__":
+    test()
