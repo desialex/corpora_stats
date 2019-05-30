@@ -5,15 +5,15 @@
 from conllu import parse
 from conllu import parse_tree
 import numpy as np
-import collections.abc
-from collections import OrderedDict as od
 from pprint import pprint
 from scipy import stats
 import os
 import pickle
+from collections import OrderedDict as od
 
 # ---- Project libraries -------------------------------------------------------
 from conll import load_conll, parse_conll, parse_tree_conll
+import dictutils as du
 
 
 def tree_stats(tree, root_distance=0, gov_pos='ROOT'):
@@ -66,32 +66,6 @@ def tree_stats(tree, root_distance=0, gov_pos='ROOT'):
     stats['rels'][rel]['pos_pairs'] = {(gov_pos, pos): 1}
 
     return stats
-
-def dict_merge(dct, merge_dct):
-    # Original: https://gist.github.com/angstwad/bf22d1822c38a92ec0a9
-    """ Recursive dict merge. Inspired by :meth:``dict.update()``, instead of
-    updating only top-level keys, dict_merge recurses down into dicts nested
-    to an arbitrary depth, updating keys. The ``merge_dct`` is merged into
-    ``dct``.
-    :param dct: dict onto which the merge is executed
-    :param merge_dct: dct merged into dct
-    :return: None
-    """
-    for k, v in merge_dct.items():
-        if k in dct:
-            if isinstance(dct[k], dict) and isinstance(merge_dct[k], collections.abc.Mapping):
-                dict_merge(dct[k], merge_dct[k])
-            else:
-                dct[k] += merge_dct[k] # assumes the values are numerical
-        else:
-            dct[k] = merge_dct[k]
-
-def merge_dicts(dicts):
-    """Merges a list of dictionaries"""
-    merged = {}
-    for d in dicts:
-        dict_merge(merged, d)
-    return merged
 
 def describe_dist(dist, rdist, ref_rdist):
     d = {}
@@ -165,16 +139,6 @@ def corpus_stats(trees):
 
     return corpus
 
-def keyset(dicts):
-    """Returns the list of all keys found a number of dictionaries"""
-    return sorted(set([k for d in dicts for k in d.keys()]))
-
-def normalize_values(d):
-    """Normalize the values of a dictionary (offset and scale)"""
-    values = np.array(d.values())
-    values = (values - values.min()) / (values.max() - values.min())
-    return dict(zip(d.keys(),values))
-
 def vectorize_dicts(dicts):
     """Returns a list of normalized vectors for a list of dictionaries"""
     keys = keyset(dicts)
@@ -204,7 +168,6 @@ def flatten(dictionary):
             vector = np.append(vector, v)
     return vector
 
-
 def vectorize(dic, keyset, section):
     """Creates a normalized vector per keyset"""
     vector = np.array([])
@@ -222,7 +185,6 @@ def vectorize(dic, keyset, section):
             else:
                 vector = np.append(vector, [0]*14) # hardcoded value
     return vector
-
 
 def get_vectors(dicts):
     """Transforms dicts to equal length vectors"""
