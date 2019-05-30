@@ -57,10 +57,10 @@ def tree_stats(tree, root_distance=0, gov_pos='ROOT'):
     left = sum([True for c in children_stats if c['root_id']-stats['root_id'] < 0])
     stats['rels'][rel]['right'] = right
     stats['rels'][rel]['left'] = left
-    stats['rels'] = merge_dicts([stats['rels']] + [c['rels'] for c in children_stats])
+    stats['rels'] = du.merge_dicts([stats['rels']] + [c['rels'] for c in children_stats])
     stats['postags'][pos]['right'] = right
     stats['postags'][pos]['left'] = left
-    stats['postags'] = merge_dicts([stats['postags']] + [c['postags'] for c in children_stats])
+    stats['postags'] = du.merge_dicts([stats['postags']] + [c['postags'] for c in children_stats])
 
     # Gov and dep POS for relations
     stats['rels'][rel]['pos_pairs'] = {(gov_pos, pos): 1}
@@ -69,25 +69,25 @@ def tree_stats(tree, root_distance=0, gov_pos='ROOT'):
 
 def describe_dist(dist, rdist, ref_rdist):
     d = {}
+    d['mean'] = np.mean(rdist) # location
+    d['median'] = np.median(rdist) # location
     d['std'] = np.std(rdist) # spread
     d['var'] = np.var(rdist) # spread
-    d['skew'] = stats.skew(dist) # shape
-    d['mean'] = np.mean(rdist) # location
     d['range'] = stats.iqr(rdist) # spread
-    d['median'] = np.median(rdist) # location
-    d['kurtosis'] = stats.kurtosis(dist) # shape
     d['entropy'] = stats.entropy(rdist) # spread
+    d['skew'] = stats.skew(dist) # shape
+    d['kurtosis'] = stats.kurtosis(dist) # shape
     d['anova'] = stats.f_oneway(ref_rdist, rdist)[0] # correlation
     return d
 
 def corpus_stats(trees):
-    merged = merge_dicts(tree_stats(tree) for tree in trees)
+    merged = du.merge_dicts([tree_stats(tree) for tree in trees])
 
     # Distributions
     rels_branch_patns = sum([len(rel['branches']) for rel in merged['rels'].values()])
     pos_branch_patns = sum([len(pos['branches']) for pos in merged['postags'].values()])
-    items_rdist = [v / merged['weight'] for v in merge_dicts(rel['branches'] for rel in merged['rels'].values()).values()]
-    pos_pairs_sum = len(merge_dicts(dic['pos_pairs'] for dic in merged['rels'].values())) # total unique pos_pairs
+    items_rdist = [v / merged['weight'] for v in du.merge_dicts(rel['branches'] for rel in merged['rels'].values()).values()]
+    pos_pairs_sum = len(du.merge_dicts(dic['pos_pairs'] for dic in merged['rels'].values())) # total unique pos_pairs
 
     # Create a new dictionary
     corpus = {}

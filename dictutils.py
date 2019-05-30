@@ -1,6 +1,7 @@
 import numpy as np
 from pprint import pprint
 import collections.abc
+from collections import OrderedDict as od
 
 def keyset(dicts, typed=False):
     """
@@ -44,7 +45,7 @@ def normalize_values(d):
 
 def normalize_dicts(dicts):
     """
-    Normalize keys and values across a list of dictionaries (offset and scale)
+    Normalize keys and values across a list of dictionaries (offset and scale).
     """
     keys = keyset(dicts, typed=True) # list of keys and types
     dicts = [normalize_keys(d, keys) for d in dicts] # make sure we have the same keys
@@ -104,6 +105,24 @@ def merge_dicts(dicts):
     for d in dicts:
         merge_into(merged, d)
     return merged
+
+def to_vector(dictionary):
+    """Flattens a dictionary (and embedded dictionaries) to a vector"""
+    ordered = od(sorted(dictionary.items()))
+    vector = np.array([])
+    for k, v in ordered.items():
+        if isinstance(v, dict):
+            # np.append doesn't work like list.append
+            # if the element to append is a list, it is
+            # concatenated element-wise
+            vector = np.append(vector, to_vector(v))
+        else:
+            vector = np.append(vector, v)
+    return vector
+
+def to_vectors(dicts):
+    """Returns a list of vectors for a list of dictionaries"""
+    return [to_vector(d) for d in normalize_dicts(dicts)]
 
 
 # TEST ROUTINES
@@ -168,6 +187,18 @@ def test_merge_dicts():
     assert merge_dicts([dummies()[0]]*2) == {}
     assert merge_dicts(dummies()) == {'a': 10, 'b': 6, 'c': {'d': 4, 'e': 6, 'i': {'j': 4}}, 'f': 4, 'g': {}, 'h': 0}
 
+def test_to_vector():
+    assert (to_vector(dummies()[4]) == np.array([1., 1., 4., 4., 4., 0.])).all()
+
+def test_to_vectors():
+    vectors = to_vectors(dummies())
+    assert len({len(v) for v in vectors}) == 1 # all same length
+    assert (vectors[0] == np.array([0/5, 0, 0, 0, 0, 0, 0])).all()
+    assert (vectors[1] == np.array([1/5, 2/3, 0, 0, 0, 0, 0])).all()
+    assert (vectors[2] == np.array([5/5, 0, 0, 0.5, 0, 0, 0])).all()
+    assert (vectors[3] == np.array([3/5, 1, 0, 1, 0, 0, 0])).all()
+    assert (vectors[4] == np.array([1/5, 1/3, 1, 0, 1, 1, 0])).all()
+
 def test():
     test_keyset()
     test_normalize_keys()
@@ -176,6 +207,8 @@ def test():
     test_mean_dict()
     test_merge_into()
     test_merge_dicts()
+    test_to_vector()
+    test_to_vectors()
 
 if __name__ == "__main__":
     test()
