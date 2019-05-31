@@ -29,7 +29,7 @@ def normalize_keys(d, keys):
 
 def normalize_values(d):
     """
-    Normalize the values of a single dictionary (sum=1).
+    Normalize the values of a single dictionary (sum=1), across keys.
     NOT recursive. Expects non-negative numerical values.
     """
     if not d: # empty dict
@@ -39,8 +39,9 @@ def normalize_values(d):
             assert isinstance(v, (int, float)), 'Numerical value expected'
             assert v >= 0, 'Non negative value expected'
         values = np.array(list(d.values()))
-        if values.sum() != 0:
-            values = values / values.sum()
+        n = values.sum()
+        if n != 0:
+            values = values / n
         return dict(zip(d.keys(), values))
 
 def normalize_dicts(dicts):
