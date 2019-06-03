@@ -170,7 +170,9 @@ def test():
         assert round(sum([d['r_freq'] for d in st[key].values()]), 15) == 1
         branches = [d['branches'] for d in st[key].values()]
         assert min([round(b['left'] + b['right'], 15) in {0,1} for b in branches]) == True
-        # Why do we have some 0 values?
+        # We have a 0 sum when there are no dependents
+    # vector = du.to_vector(st)
+    # pprint(vector)
     pprint(st)
 
 if __name__ == "__main__":
