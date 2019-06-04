@@ -18,6 +18,8 @@ import dictutils as du
 # Must include final '/'
 UD_PATH = '/Users/francois/Dropbox/job/data/UD_2.4/merged/'
 DATA_PATH = 'data/'
+# UD_PATH = 'data-test/'
+# DATA_PATH = 'data-test/'
 # ==============================================================================
 
 def tree_stats(tree, root_distance=0, gov_pos='ROOT'):
@@ -85,7 +87,7 @@ def describe_dist(dist, rdist, ref_rdist):
     return d
 
 def corpus_stats(trees):
-    
+
     size = len(trees)
     merged = du.merge_dicts([tree_stats(tree) for tree in trees]) # values are added
 
@@ -148,8 +150,14 @@ if __name__ == "__main__":
 
     files = sorted([f for f in os.listdir(UD_PATH) if f.endswith('.conllu')])
     languages = [f[:-7] for f in files]
+    pickled = [f for f in os.listdir(DATA_PATH) if f.endswith('.pickle')]
+    done = [f[:-7] for f in pickled]
 
     for file, lng in zip(files, languages):
+
+        if lng in done:
+            continue
+
         print('Processing', lng)
 
         try:
@@ -173,3 +181,5 @@ if __name__ == "__main__":
         fn = DATA_PATH + lng + '.pickle'
         with open(fn, 'wb') as f:
             pickle.dump(data, f)
+
+    print('Done')
