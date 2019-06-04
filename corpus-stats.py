@@ -181,5 +181,3 @@ if __name__ == "__main__":
         fn = DATA_PATH + lng + '.pickle'
         with open(fn, 'wb') as f:
             pickle.dump(data, f)
-
-    print('Done')
