@@ -12,15 +12,7 @@ from collections import OrderedDict as od
 # Project libraries
 from conll import load_conll, parse_conll, parse_tree_conll
 import dictutils as du
-
-# PARAMETERS
-# ==============================================================================
-# Must include final '/'
-UD_PATH = '/Users/francois/Dropbox/job/data/UD_2.4/merged/'
-DATA_PATH = 'data/'
-# UD_PATH = 'data-test/'
-# DATA_PATH = 'data-test/'
-# ==============================================================================
+import argparse
 
 def tree_stats(tree, root_distance=0, gov_pos='ROOT'):
 
@@ -147,6 +139,17 @@ def sanity_check(data):
     # pprint(st)
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='Get statistics for each corpus.')
+    parser.add_argument('-i', '--inpath',
+                        default='data-test/',
+                        help='path where the corpora reside')
+    parser.add_argument('-o', '--outpath',
+                        default='data-test/',
+                        help='path where the statistics should be saved')
+    args = parser.parse_args()
+    UD_PATH = args.inpath
+    DATA_PATH = args.outpath
 
     files = sorted([f for f in os.listdir(UD_PATH) if f.endswith('.conllu')])
     languages = [f[:-7] for f in files]
