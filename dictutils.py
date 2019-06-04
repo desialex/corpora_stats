@@ -86,7 +86,7 @@ def merge_into(dict_into, dict_from):
     Recursive dict merge. Inspired by :meth:``dict.update()``, instead of
     updating only top-level keys, dict_merge recurses down into dicts nested
     to an arbitrary depth, updating keys.
-    Paramenters:
+    Parameters:
         dict_into (dict): dict into which to merge
         dict_from (dict): dict to merge into dict_into
     Returns: None
@@ -95,8 +95,8 @@ def merge_into(dict_into, dict_from):
         if k in dict_into:
             if isinstance(dict_from[k], collections.abc.Mapping) and isinstance(dict_into[k], collections.abc.Mapping):
                 merge_into(dict_into[k], dict_from[k])
-            else:
-                dict_into[k] += dict_from[k] # assumes the values are numerical
+            else: # values are numerical or lists (both work)
+                dict_into[k] += dict_from[k]
         else:
             dict_into[k] = dict_from[k]
 
@@ -177,16 +177,21 @@ def test_merge_into():
     d3 = dummies()[2]
     d4 = dummies()[3]
     d5 = dummies()[4]
+    d6 = {'a': [1, 2]}
+    d7 = {'a': [3, 4]}
     merge_into(d1, d2)
     assert d1 == d2
     merge_into(d2, d3)
     assert d2 == {'a': 6, 'b': 2, 'c': {'e': 2}}
     merge_into(d5, d4)
     assert d5 == {'a':4, 'b':4, 'c':{'d':4, 'e':4, 'i':{'j':4}}, 'f':4, 'g':{}, 'h':0}
+    merge_into(d6, d7)
+    assert d6 == {'a': [1, 2, 3, 4]}
 
 def test_merge_dicts():
     assert merge_dicts([dummies()[0]]*2) == {}
     assert merge_dicts(dummies()) == {'a': 10, 'b': 6, 'c': {'d': 4, 'e': 6, 'i': {'j': 4}}, 'f': 4, 'g': {}, 'h': 0}
+    assert merge_dicts([{'a':[1,2]}, {'a':[3,4]}]) == {'a':[1,2,3,4]}
 
 def test_to_vector():
     assert (to_vector(dummies()[4]) == np.array([1., 1., 4., 4., 4., 0.])).all()
