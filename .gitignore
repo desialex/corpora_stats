@@ -10,5 +10,4 @@ __pycache__/
 *.fls
 *.log
 *.aux
-*.pickle
 src/
