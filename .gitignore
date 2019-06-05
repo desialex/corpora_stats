@@ -11,3 +11,7 @@ __pycache__/
 *.log
 *.aux
 src/
+data-test/fr_ftb-ud-dev.pickle
+data-test/fr_ftb-ud-test.pickle
+data-test/test1.pickle
+data-test/test2.pickle
