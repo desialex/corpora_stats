@@ -17,12 +17,8 @@ import dictutils as du
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Vectroize corpora statistics.')
-    parser.add_argument('-i', '--inpath',
-                        default='data-test/',
-                        help='path where the corpora statistics reside')
-    parser.add_argument('-o', '--outpath',
-                        default='data-test/',
-                        help='path where the vectorized data should be saved')
+    parser.add_argument('-i', '--inpath', default='data-test/', help='path where the corpora statistics reside')
+    parser.add_argument('-o', '--outpath', default='data-test/', help='path where the vectorized data should be saved')
     args = parser.parse_args()
     INPATH = args.inpath
     OUTPATH = args.outpath
@@ -33,9 +29,7 @@ if __name__ == "__main__":
     # Each pickle is a dictionary
     corpora = [pickle.load(open(INPATH + file, 'rb')) for file in files]
 
-    keys = du.keyset(corpora)
-
-    print(keys)
-
-    for corpus in corpora:
+    for lng, corpus in zip(languages, corpora):
+        print(lng)
         pprint(corpus)
+        print()
