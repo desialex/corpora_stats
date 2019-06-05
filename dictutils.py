@@ -1,7 +1,7 @@
 import numpy as np
 from pprint import pprint
 import collections.abc
-from collections import OrderedDict
+from collections import OrderedDict as od
 
 def keyset(dicts, typed=False):
     """
@@ -109,7 +109,7 @@ def merge_dicts(dicts):
 
 def to_vector(dictionary):
     """Flattens a dictionary (and embedded dictionaries) to a vector"""
-    ordered = OrderedDict(sorted(dictionary.items()))
+    ordered = od(sorted(dictionary.items()))
     vector = np.array([])
     for k, v in ordered.items():
         if isinstance(v, dict):
@@ -123,11 +123,8 @@ def to_vector(dictionary):
 
 def to_vectors(dicts):
     """Returns a list of vectors for a list of dictionaries"""
-    return [to_vector(d) for d in dicts]
+    return [to_vector(d) for d in normalize_dicts(dicts)]
 
-def ordered(dict):
-    """Sorts the keys in a dictionary and returns an OrderedDict"""
-    OrderedDict
 
 # TEST ROUTINES
 # ===================================================================
