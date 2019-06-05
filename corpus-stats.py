@@ -13,13 +13,12 @@ from conll import parse_tree_conll
 import dictutils as du
 import argparse
 
-
 def tree_stats(tree, root_distance=0, gov_pos='ROOT'):
 
     # Initialize dictionary
     stats = {}
     stats['root_id'] = tree.token['id']
-    rel = tree.token['deprel']
+    rel = tree.token['deprel'].split(':')[0] # ignoring subtypes
     pos = tree.token['upostag']
     stats['rels'] = {rel: {'branches': [len(tree.children)], 'count': 1}}
     stats['postags'] = {pos: {'branches': [len(tree.children)], 'count': 1}}
