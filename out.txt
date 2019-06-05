@@ -1,8 +1,0 @@
-test
-fr_ftb-ud-train
-fr_ftb-ud-dev
-fr_ftb-ud-test
-{'fr_ftb-ud-dev': array([], dtype=float64),
- 'fr_ftb-ud-test': array([], dtype=float64),
- 'fr_ftb-ud-train': array([], dtype=float64),
- 'test': array([], dtype=float64)}
