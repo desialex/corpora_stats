@@ -20,7 +20,7 @@ def tree_stats(tree, root_distance=0, gov_pos='ROOT'):
     stats['root_id'] = tree.token['id']
     rel = tree.token['deprel'].split(':')[0] # ignoring subtypes
     pos = tree.token['upostag']
-    stats['rels'] = {rel: {'branches': [len(tree.children)], 'count': 1}}
+    stats['rels'] = {rel: {'branches': [len(tree.children)], 'count': 1, 'pospairs': {(gov_pos, tree.token['upostag']): 1}}}
     stats['postags'] = {pos: {'branches': [len(tree.children)], 'count': 1}}
 
     # Get stats for all children (children_stats is a list of stat dictionaries)
@@ -52,10 +52,13 @@ def tree_stats(tree, root_distance=0, gov_pos='ROOT'):
     left = sum([True for c in children_stats if c['root_id']-stats['root_id'] < 0])
     stats['rels'][rel]['right'] = right
     stats['rels'][rel]['left'] = left
-    stats['rels'] = du.merge_dicts([stats['rels']] + [c['rels'] for c in children_stats])
     stats['postags'][pos]['right'] = right
     stats['postags'][pos]['left'] = left
-    stats['postags'] = du.merge_dicts([stats['postags']] + [c['postags'] for c in children_stats])
+
+    # Merging children stats
+    for child in children_stats:
+        du.merge_into(stats['rels'], child['rels'])
+        du.merge_into(stats['postags'], child['postags'])
 
     return stats
 
@@ -87,7 +90,7 @@ def corpus_stats(trees):
 
     # Initialize dictionary
     corpus = {}
-    corpus['rels'] = {rel: dict() for rel in merged['rels'].keys()}
+    corpus['rels'] = {rel: {'pospairs': dict()} for rel in merged['rels'].keys()}
     corpus['postags'] = {pos: dict() for pos in merged['postags'].keys()}
 
     # Corpus stats (means)
@@ -96,7 +99,7 @@ def corpus_stats(trees):
     corpus['depth'] = merged['depth'] / size # mean depth
     corpus['weight'] = merged['weight'] / size # mean weight
 
-    # Processing merged['rels'] and merged['postags'] the same way
+    # Processing merged['rels'] and merged['postags'] the same way (except pos pairs)
     for key in ['rels', 'postags']:
         for pos_rel, dic in merged[key].items():
             # print(key, pos_rel)
@@ -120,16 +123,22 @@ def corpus_stats(trees):
             corpus[key][pos_rel]['branches']['left'] = dic['left'] / sum_branches if sum_branches > 0 else 0
             corpus[key][pos_rel]['branches']['right'] = dic['right'] / sum_branches if sum_branches > 0 else 0
 
+            # Pos pairs (only for relations)
+            if key == 'rels':
+                sum_pairs = sum(dic['pospairs'].values())
+                for pair, val in dic['pospairs'].items():
+                    corpus[key][pos_rel]['pospairs'][pair] = val / sum_pairs
+
     return corpus
 
 
 def sanity_check(data):
     for key in ['postags', 'rels']:
-        assert round(sum([d['freq'] for d in data[key].values()]), 15) == 1
+        assert round(sum([d['freq'] for d in data[key].values()]), 12) == 1
         branches = [d['branches'] for d in data[key].values()]
-        assert min([round(b['left'] + b['right'], 15) in {0,1} for b in branches]) == True
+        assert min([round(b['left'] + b['right'], 12) in {0,1} for b in branches]) == True
         # We have a 0 sum when there are no dependents
-
+    assert min([round(sum(d['pospairs'].values()), 12)==1 for d in data['rels'].values()]) == True
 
 if __name__ == "__main__":
 
@@ -145,34 +154,39 @@ if __name__ == "__main__":
     pickled = [f for f in os.listdir(DATA_PATH) if f.endswith('.pickle')]
     done = [f[:-7] for f in pickled]
 
-    for file, lng in zip(files, languages):
+    with open(DATA_PATH + 'data.txt', 'w', encoding='utf8') as d:
+        for file, lng in zip(files, languages):
 
-        if lng in done:
-            continue
+            if lng in done:
+                continue
 
-        print('Processing', lng)
+            print('Processing', lng)
 
-        try:
-            corpus = parse_tree_conll(UD_PATH + file)
-        except:
-            print("  SKIPPING: can't parse", file)
-            continue
+            try:
+                corpus = parse_tree_conll(UD_PATH + file)
+            except:
+                print("  SKIPPING: can't parse", file)
+                continue
 
-        try:
-            data = corpus_stats(corpus)
-        except ValueError as err:
-            print('  SKIPPING: '+str(err))
-            continue
-        except:
-            print("  SKIPPING: can't process the corpus for", lng)
-            continue
+            try:
+                data = corpus_stats(corpus)
+            except ValueError as err:
+                print('  SKIPPING: '+str(err))
+                continue
+            except:
+                print("  SKIPPING: can't process the corpus for", lng)
+                continue
 
-        try:
-            sanity_check(data)
-        except:
-            print("  SKIPPING: flushing inconsistent data for", lng)
-            continue
+            try:
+                sanity_check(data)
+            except:
+                print("  SKIPPING: flushing inconsistent data for", lng)
+                continue
 
-        fn = DATA_PATH + lng + '.pickle'
-        with open(fn, 'wb') as f:
-            pickle.dump(data, f)
+            fn = DATA_PATH + lng + '.pickle'
+            with open(fn, 'wb') as f:
+                pickle.dump(data, f)
+
+            print(lng, file=d)
+            pprint(data, stream=d)
+            print('\n', file=d)

@@ -5,8 +5,8 @@ from collections import OrderedDict
 
 def keyset(dicts, typed=False):
     """
-    Takes a list of dictionaries and returns the list of all keys (and value
-    types if typed=True)
+    Takes a list of dictionaries and returns the sorted list of all keys
+    (and value types if typed=True)
     """
     if typed:
         return sorted(set([(k,type(d[k])) for d in dicts for k in d.keys()]))
@@ -83,7 +83,7 @@ def mean_dict(dicts):
 def merge_into(dict_into, dict_from):
     # Original: https://gist.github.com/angstwad/bf22d1822c38a92ec0a9
     """
-    Recursive dict merge. Inspired by :meth:``dict.update()``, instead of
+    Recursive dict merge. Inspired by dict.update(), instead of
     updating only top-level keys, dict_merge recurses down into dicts nested
     to an arbitrary depth, updating keys.
     Parameters:
@@ -108,12 +108,12 @@ def merge_dicts(dicts):
     return merged
 
 def to_vector(dictionary):
-    """Flattens a dictionary (and embedded dictionaries) to a vector"""
+    """Orders and flattens a dictionary (and embedded dictionaries) to a vector"""
     ordered = OrderedDict(sorted(dictionary.items()))
     vector = np.array([])
     for k, v in ordered.items():
         if isinstance(v, dict):
-            # np.append doesn't work like list.append
+            # np.append() doesn't work like list.append()
             # if the element to append is a list, it is
             # concatenated element-wise
             vector = np.append(vector, to_vector(v))
@@ -125,9 +125,17 @@ def to_vectors(dicts):
     """Returns a list of vectors for a list of dictionaries"""
     return [to_vector(d) for d in dicts]
 
-def ordered(dict):
-    """Sorts the keys in a dictionary and returns an OrderedDict"""
-    OrderedDict
+def count_values(dct):
+    """Recursively count the number of values in a dict with nested dicts"""
+    n = 0
+    for k, v in dct.items():
+        if isinstance(v, dict):
+            n += count_values(v)
+        else:
+            n += 1
+    return n
+
+
 
 # TEST ROUTINES
 # ===================================================================
@@ -201,12 +209,19 @@ def test_to_vector():
 
 def test_to_vectors():
     vectors = to_vectors(dummies())
-    assert len({len(v) for v in vectors}) == 1 # all same length
     assert (vectors[0] == np.array([0/5, 0, 0, 0, 0, 0, 0])).all()
     assert (vectors[1] == np.array([1/5, 2/3, 0, 0, 0, 0, 0])).all()
     assert (vectors[2] == np.array([5/5, 0, 0, 0.5, 0, 0, 0])).all()
     assert (vectors[3] == np.array([3/5, 1, 0, 1, 0, 0, 0])).all()
     assert (vectors[4] == np.array([1/5, 1/3, 1, 0, 1, 1, 0])).all()
+
+def test_count_values():
+    assert count_values(dummies()[0]) == 0
+    assert count_values(dummies()[1]) == 2
+    assert count_values(dummies()[2]) == 2
+    assert count_values(dummies()[3]) == 3
+    assert count_values(dummies()[4]) == 6
+
 
 def test():
     test_keyset()
@@ -218,6 +233,7 @@ def test():
     test_merge_dicts()
     test_to_vector()
     test_to_vectors()
+    test_count_values()
 
 if __name__ == "__main__":
     test()
