@@ -68,7 +68,7 @@ def normalize(corpora):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Vectorize corpora statistics.')
-    parser.add_argument('-i', '--inpath', default='data-test/', help='path where the corpora statistics reside')
+    parser.add_argument('-i', '--inpath', default='data/', help='path where the corpora statistics reside')
     parser.add_argument('-o', '--outpath', default='data-test/', help='path where the vectorized data should be saved')
     args = parser.parse_args()
     INPATH = args.inpath
@@ -105,6 +105,6 @@ if __name__ == "__main__":
     except:
         raise Exception('ERROR: vectors are not of equal lengths:\n' + str([len(v) for v in vectors]))
 
-    fn = OUTPATH + 'vectors.pickle'
+    fn = OUTPATH + 'vectors-all.pickle'
     with open(fn, 'wb') as f:
         pickle.dump(zip(languages, vectors), f)

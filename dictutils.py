@@ -118,7 +118,8 @@ def to_vector(dictionary):
             # concatenated element-wise
             vector = np.append(vector, to_vector(v))
         else:
-            vector = np.append(vector, v)
+            if k not in ['kurtosis', 'weight', 'skew', 'median', 'std', 'mean', 'depth', 'range', 'freq']:
+                vector = np.append(vector, v)
     return vector
 
 def to_vectors(dicts):
